@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Manager Pro</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        /* Animasi Fade In */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Area Auth (Login/Register) */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            padding: 20px;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background: white;
+        }
+
+        /* Area Dashboard */
+        .dashboard-container {
+            display: none; /* Hidden by default */
+        }
+        .navbar-custom {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: white;
+        }
+        
+        .api-key-text {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #4f46e5;
+            background: #eef2ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* Utility Classes untuk Navigasi Halaman */
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-wrapper" class="auth-container page-section active">
+        
+        <div id="login-card" class="card auth-card p-4 fade-in">
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mt-2">Selamat Datang</h4>
+                <p class="text-muted small">Login untuk mengelola API Key Anda</p>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="login-username" placeholder="Username">
+                <label for="login-username">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="login-password" placeholder="Password">
+                <label for="login-password">Password</label>
+            </div>
+            
+            <button class="btn btn-primary w-100 py-2 fw-bold" onclick="login()">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Masuk
+            </button>
+            
+            <div class="text-center mt-3">
+                <span class="text-muted small">Belum punya akun?</span>
+                <a href="#" onclick="toggleAuth('register')" class="text-decoration-none fw-bold">Daftar Sekarang</a>
+            </div>
+        </div>
+
+        <div id="register-card" class="card auth-card p-4 fade-in d-none">
+            <div class="text-center mb-4">
+                <i class="bi bi-person-plus-fill text-success" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mt-2">Buat Akun Baru</h4>
+                <p class="text-muted small">Daftar untuk mendapatkan akses API</p>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="reg-username" placeholder="Username">
+                <label for="reg-username">Username Baru</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="reg-password" placeholder="Password">
+                <label for="reg-password">Password</label>
+            </div>
+            <div class="form-floating mb-3">
+                <select class="form-select" id="reg-role">
+                    <option value="mahasiswa" selected>Mahasiswa</option>
+                    <option value="admin">Admin (Simulasi)</option>
+                </select>
+                <label for="reg-role">Daftar Sebagai</label>
+            </div>
+
+            <button class="btn btn-success w-100 py-2 fw-bold" onclick="register()">
+                <i class="bi bi-check-lg me-1"></i> Daftar
+            </button>
+            
+            <div class="text-center mt-3">
+                <a href="#" onclick="toggleAuth('login')" class="text-decoration-none small text-muted">
+                    <i class="bi bi-arrow-left"></i> Kembali ke Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-wrapper" class="dashboard-container page-section">
+        
+        <nav class="navbar navbar-custom px-4 py-3 mb-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-code-slash fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="m-0 fw-bold text-dark">API Manager</h5>
+                    <span class="badge bg-light text-secondary border" id="role-badge">Role</span>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted d-none d-md-block" id="welcome-msg">User</span>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="bi bi-power"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <div class="container">
+            
+            <div id="mahasiswa-view" class="d-none">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h3 class="fw-bold text-dark">Dashboard Saya</h3>
+                        <p class="text-muted">Kelola kunci API untuk proyek aplikasi Anda.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary shadow-sm" onclick="generateKey()">
+                            <i class="bi bi-plus-lg"></i> Buat API Key Baru
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>API Key</th>
+                                    <th>Status</th>
+                                    <th>Dibuat Pada</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-keys-list"></tbody>
+                        </table>
+                    </div>
+                    <div id="empty-state-mhs" class="text-center py-5 d-none">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="mb-3 opacity-50">
+                        <p class="text-muted">Belum ada API Key. Silakan buat baru.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-view" class="d-none">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h3 class="fw-bold text-dark">Panel Admin</h3>
+                        <p class="text-muted">Pantau dan kelola seluruh penggunaan API Key user.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-outline-secondary shadow-sm" onclick="loadAllKeys()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-4 border-top border-4 border-danger">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>API Key</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Kontrol</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-keys-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    const API_URL = 'http://localhost:3000';
+
+    // --- UTILS NAVIGATION ---
+    
+    // Fungsi pindah antara LOGIN vs REGISTER
+    function toggleAuth(mode) {
+        const loginCard = document.getElementById('login-card');
+        const regCard = document.getElementById('register-card');
+        
+        if (mode === 'register') {
+            loginCard.classList.add('d-none');
+            regCard.classList.remove('d-none');
+        } else {
+            loginCard.classList.remove('d-none');
+            regCard.classList.add('d-none');
+        }
+    }
+
+    // Fungsi pindah halaman AUTH vs DASHBOARD
+    function switchPage(page) {
+        const authWrapper = document.getElementById('auth-wrapper');
+        const dashWrapper = document.getElementById('dashboard-wrapper');
+
+        if(page === 'dashboard') {
+            authWrapper.classList.remove('active');
+            dashWrapper.classList.add('active');
+        } else {
+            authWrapper.classList.add('active');
+            dashWrapper.classList.remove('active');
+            toggleAuth('login'); // Reset ke login form
+        }
+    }
+
+    // --- FORMATTING ---
+    function formatDate(dateString) {
+        if(!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Disalin!', showConfirmButton: false, timer: 1500 });
+    }
+
+    // --- AUTHENTICATION ---
+    async function register() {
+        const username = document.getElementById('reg-username').value;
+        const password = document.getElementById('reg-password').value;
+        const role = document.getElementById('reg-role').value;
+
+        if(!username || !password) return Swal.fire('Error', 'Isi semua kolom!', 'error');
+
+        try {
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role })
+            });
+            const data = await res.json();
+            
+            if(res.ok) {
+                Swal.fire('Berhasil!', 'Akun dibuat. Silakan login.', 'success');
+                toggleAuth('login');
+            } else {
+                Swal.fire('Gagal', data.error || data.message, 'error');
+            }
+        } catch (e) { Swal.fire('Error', 'Gagal koneksi server', 'error'); }
+    }
+
+    async function login() {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.role);
+                localStorage.setItem('username', data.username);
+                setupDashboard(data.role, data.username);
+            } else {
+                Swal.fire('Gagal', data.message, 'error');
+            }
+        } catch (e) { Swal.fire('Error', 'Gagal koneksi server', 'error'); }
+    }
+
+    function logout() {
+        Swal.fire({
+            title: 'Logout?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Batal'
+        }).then((res) => {
+            if(res.isConfirmed) {
+                localStorage.clear();
+                window.location.reload();
+            }
+        });
+    }
+
+    function setupDashboard(role, username) {
+        switchPage('dashboard');
+        
+        document.getElementById('welcome-msg').innerText = `Halo, ${username}`;
+        document.getElementById('role-badge').innerText = role.toUpperCase();
+        
+        const mhsView = document.getElementById('mahasiswa-view');
+        const adminView = document.getElementById('admin-view');
+
+        mhsView.classList.add('d-none');
+        adminView.classList.add('d-none');
+
+        if (role === 'admin') {
+            adminView.classList.remove('d-none');
+            loadAllKeys();
+        } else {
+            mhsView.classList.remove('d-none');
+            loadMyKeys();
+        }
+    }
+
+    // --- API LOGIC ---
+    async function generateKey() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/api/generate`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if(res.ok) {
+            Swal.fire('Sukses', 'Key baru dibuat!', 'success');
+            loadMyKeys();
+        }
+    }
+
+    async function loadMyKeys() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/api/my-keys`, { headers: { 'Authorization': `Bearer ${token}` }});
+        const keys = await res.json();
+        
+        const tbody = document.getElementById('my-keys-list');
+        const emptyState = document.getElementById('empty-state-mhs');
+        tbody.innerHTML = '';
+
+        if(keys.length === 0) emptyState.classList.remove('d-none');
+        else {
+            emptyState.classList.add('d-none');
+            keys.forEach(k => {
+                const statusHtml = k.status === 'active' 
+                    ? '<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span>' 
+                    : '<span class="badge bg-secondary rounded-pill px-3">Revoked</span>';
+                
+                const btnHtml = k.status === 'active' 
+                    ? `<button class="btn btn-outline-warning btn-sm" onclick="revokeKey(${k.id})"><i class="bi bi-slash-circle"></i></button>` : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <span class="api-key-text me-2">${k.api_key}</span>
+                            <button class="btn btn-light btn-sm" onclick="copyToClipboard('${k.api_key}')"><i class="bi bi-clipboard"></i></button>
+                        </td>
+                        <td>${statusHtml}</td>
+                        <td class="text-muted small">${formatDate(k.created_at)}</td>
+                        <td class="text-end">${btnHtml}</td>
+                    </tr>
+                `;
+            });
+        }
+    }
+
+    async function loadAllKeys() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/api/admin/all-keys`, { headers: { 'Authorization': `Bearer ${token}` }});
+        const keys = await res.json();
+        const tbody = document.getElementById('all-keys-list');
+        tbody.innerHTML = '';
+
+        keys.forEach(k => {
+            const statusHtml = k.status === 'active' 
+                ? '<span class="badge bg-success bg-opacity-10 text-success rounded-pill">Active</span>' 
+                : '<span class="badge bg-secondary rounded-pill">Revoked</span>';
+            
+            const revokeBtn = k.status === 'active' 
+                ? `<button class="btn btn-warning btn-sm me-1" onclick="revokeKey(${k.id})"><i class="bi bi-slash-circle"></i></button>` : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td class="fw-bold">${k.username}</td>
+                    <td><span class="api-key-text small">${k.api_key}</span></td>
+                    <td>${statusHtml}</td>
+                    <td class="text-end">
+                        ${revokeBtn}
+                        <button class="btn btn-danger btn-sm" onclick="deleteKey(${k.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function revokeKey(id) {
+        if(!(await Swal.fire({ title: 'Matikan Key?', icon: 'warning', showCancelButton: true })).isConfirmed) return;
+
+        const token = localStorage.getItem('token');
+        await fetch(`${API_URL}/api/revoke`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key_id: id })
+        });
+        
+        localStorage.getItem('role') === 'admin' ? loadAllKeys() : loadMyKeys();
+        Swal.fire('Revoked', '', 'success');
+    }
+
+    async function deleteKey(id) {
+        if(!(await Swal.fire({ title: 'Hapus Permanen?', icon: 'error', showCancelButton: true })).isConfirmed) return;
+
+        const token = localStorage.getItem('token');
+        await fetch(`${API_URL}/api/admin/delete-key/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        loadAllKeys();
+        Swal.fire('Terhapus', '', 'success');
+    }
+
+    window.onload = () => {
+        const token = localStorage.getItem('token');
+        if(token) setupDashboard(localStorage.getItem('role'), localStorage.getItem('username'));
+    };
+</script>
+
+</body>
+</html>
