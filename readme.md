@@ -4,5 +4,5 @@ register:
 ![alt text](ss/RegisterPage.png)
 Dashboard admin:
 ![alt text](ss/DashboardAdmin.png)
-Dashboard mahasiswa;
+Dashboard mahasiswa:
 ![alt text](ss/DashboardMahasiswa.png)
